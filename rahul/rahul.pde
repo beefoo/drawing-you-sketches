@@ -3,17 +3,26 @@
  * Author: Brian Foo (http://brianfoo.com)
  * This drawing algorithm is based on my friend Rahul
  */
+ 
+import processing.video.*;
 
-String imgSrc = "img/test.jpg";
+String imgSrc = "img/test_960.jpg";
 String outputFile = "output/test.png";
-int storeWidth = 800;
-int storeHeight = 800;
-int fr = 120;
-int startX = 320;
-int startY = 345;
+int storeWidth = 960;
+int storeHeight = 720;
+int startX = 350;
+int startY = 350;
 int gridUnit = 20;
 float angleUnit = 10;
 
+int fr = 120;
+String outputMovieFile = "output/frames/frames-#####.png";
+int frameCaptureEvery = 120;
+int frameIterator = 0;
+boolean captureFrames = true;
+FrameSaver fs;
+
+PGraphics pg;
 PImage store;
 RahulGang theRahulGang;
 color[] bins;
@@ -25,33 +34,41 @@ void setup() {
   size(storeWidth, storeHeight);
   colorMode(HSB, 360, 100, 100, 100);
   background(0, 0, 100);
-  frameRate(fr);  
+  frameRate(fr);
+  pg = createGraphics(storeWidth, storeHeight);
   
   // load store from image source
   store = loadImage(imgSrc);
-  image(store, 0, 0);
-  loadPixels();
+  pg.image(store, 0, 0);
+  pg.loadPixels();
   
-  // overlay rectangle
-  noStroke();
-  background(0, 0, 100);
-  rect(0, 0, storeWidth, storeHeight);
+  // just lines
   noFill();
-  smooth();
+  // smooth();
   
   // set the bins and create a Rahul Gang  
-  bins = pixels;
+  bins = pg.pixels;
   pathDirections = new float[storeWidth*storeHeight];
   theRahulGang = new RahulGang(startX, startY);
-
+  
+  // frame saver
+  fs = new FrameSaver();
 }
 
 void draw(){
-  theRahulGang.loot();
+  if(captureFrames && !fs.running) {
+    fs.start();
+  }
+  
+  theRahulGang.loot(); 
 }
 
-void mousePressed() {
-  save(outputFile);
+void mousePressed() {  
+  if (captureFrames) {
+    fs.quit();
+  } else {
+    save(outputFile);
+  }  
   exit();
 }
 
@@ -442,4 +459,41 @@ class Bin
     return (visitorsDirection() > 0);
   }
   
+}
+
+class FrameSaver extends Thread {
+ 
+  boolean running;
+   
+  public FrameSaver () {
+    running = false;
+  }
+   
+  public void start() {
+    println("recording frames!");
+    running = true;
+   
+    try{
+      super.start();
+    }
+    catch(java.lang.IllegalThreadStateException itse){
+      println("cannot execute! ->"+itse);
+    }
+  }
+   
+  public void run(){
+    while(running){
+      frameIterator++;
+      if (frameIterator >= frameCaptureEvery) {
+        frameIterator = 0;
+        saveFrame(outputMovieFile);
+      }      
+    }
+  }
+   
+  public void quit() {
+    println("stopped recording..");
+    running = false; 
+    interrupt();
+  }
 }
