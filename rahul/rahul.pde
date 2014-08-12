@@ -4,10 +4,11 @@
  * This drawing algorithm is based on my friend Rahul
  */
  
-import processing.video.*;
+import processing.pdf.*;
 
 String imgSrc = "img/test_960.jpg";
 String outputFile = "output/test.png";
+String outputPDF = "output/test.pdf";
 int storeWidth = 960;
 int storeHeight = 720;
 int startX = 350;
@@ -19,7 +20,7 @@ int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
 int frameCaptureEvery = 120;
 int frameIterator = 0;
-boolean captureFrames = true;
+boolean captureFrames = false;
 FrameSaver fs;
 
 PGraphics pg;
@@ -52,15 +53,17 @@ void setup() {
   theRahulGang = new RahulGang(startX, startY);
   
   // frame saver
-  fs = new FrameSaver();
+  if (captureFrames) fs = new FrameSaver();
+  
+  beginRecord(PDF, outputPDF);
 }
 
 void draw(){
-  if(captureFrames && !fs.running) {
+  if(captureFrames && !fs.running && !recordingPDF) {
     fs.start();
   }
   
-  theRahulGang.loot(); 
+  theRahulGang.loot();
 }
 
 void mousePressed() {  
@@ -69,6 +72,7 @@ void mousePressed() {
   } else {
     save(outputFile);
   }  
+  endRecord();
   exit();
 }
 
