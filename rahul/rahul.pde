@@ -6,13 +6,15 @@
  
 import processing.pdf.*;
 
-String imgSrc = "img/test_960.jpg";
-String outputFile = "output/test.png";
-String outputPDF = "output/test.pdf";
-int storeWidth = 960;
-int storeHeight = 720;
-int startX = 350;
-int startY = 350;
+String imgSrc = "img/rahul.jpg";
+String outputFile = "output/rahul.png";
+String outputPDF = "output/rahul.pdf";
+boolean savePDF = false;
+
+int storeWidth = 675;
+int storeHeight = 900;
+int startX = round(storeWidth/2);
+int startY = round(storeHeight/2);
 int gridUnit = 20;
 float angleUnit = 10;
 
@@ -55,11 +57,11 @@ void setup() {
   // frame saver
   if (captureFrames) fs = new FrameSaver();
   
-  beginRecord(PDF, outputPDF);
+  if (savePDF) beginRecord(PDF, outputPDF);
 }
 
 void draw(){
-  if(captureFrames && !fs.running && !recordingPDF) {
+  if(captureFrames && !fs.running) {
     fs.start();
   }
   
@@ -72,7 +74,7 @@ void mousePressed() {
   } else {
     save(outputFile);
   }  
-  endRecord();
+  if (savePDF) endRecord();
   exit();
 }
 
@@ -255,7 +257,7 @@ class Rahul
     myBin.setPathDirection(myDirection);
     
     // draw path
-    drawPath(prevX, prevY, myX, myY, iterator);
+    if (iterator<1) drawPath(prevX, prevY, myX, myY, iterator);
     
     return foundStuff;       
   }
