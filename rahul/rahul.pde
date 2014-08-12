@@ -9,19 +9,21 @@ String outputFile = "output/test.png";
 int storeWidth = 800;
 int storeHeight = 800;
 int fr = 120;
-int startX = storeWidth / 2;
-int startY = storeHeight / 2;
-int gridUnit = 2;
+int startX = 320;
+int startY = 345;
+int gridUnit = 20;
+float angleUnit = 10;
 
 PImage store;
 RahulGang theRahulGang;
 color[] bins;
+float[] pathDirections;
 
 void setup() {
   
   // set the stage
   size(storeWidth, storeHeight);
-  colorMode(HSB, 360, 100, 100);
+  colorMode(HSB, 360, 100, 100, 100);
   background(0, 0, 100);
   frameRate(fr);  
   
@@ -35,16 +37,17 @@ void setup() {
   background(0, 0, 100);
   rect(0, 0, storeWidth, storeHeight);
   noFill();
+  smooth();
   
   // set the bins and create a Rahul Gang  
   bins = pixels;
+  pathDirections = new float[storeWidth*storeHeight];
   theRahulGang = new RahulGang(startX, startY);
 
 }
 
 void draw(){
   theRahulGang.loot();
-  // exit();
 }
 
 void mousePressed() {
@@ -55,35 +58,63 @@ void mousePressed() {
 class Rahul
 {
   int capacity = 2000;
-  float strokeHue = 40;
-  float maxStrokeBrightness = 80;
-  float minStrokeSaturation = 40;
-  float maxStrokeSaturation = 100;
+  
+  float[] hueRange = {30, 50};
+  float[] brightnessRange = {10, 80};
+  float[] saturationRange = {20, 80};
+  float[] strokeWeightRange = {0.2, 1};
+  
+  float chanceToDuplicate = 0.5;
+  float chanceToChangeDirection = 0.5;
+  float chanceToAdoptIntersectedPath = 0.4;
+  float chanceToAdoptNeighborPath = 0.1;
   
   int myX, myY, myStuffCount;
+  float myDirection; // 1-360
   boolean iAmDead;
   Bin myBin;
   
-  Rahul (int x, int y, int stuffCount) {
+  Rahul (int x, int y, int stuffCount, float direction) {
     myX = x;
     myY = y;
     myStuffCount = stuffCount;
+    myDirection = normalizeAngle(direction);
     iAmDead = false;
   }
   
-  void drawPath(int x1, int y1, int x2, int y2, int iterator) {
-    float multiplier = min(float(myStuffCount)/capacity, 1.0);
-    float myStrokeHue = strokeHue;
-    float myStrokeSaturation = min(minStrokeSaturation + iterator, maxStrokeSaturation);
-    float myStrokeBrightness = maxStrokeBrightness - multiplier * maxStrokeBrightness;
-    float myStrokeWeight = multiplier;
+  Bin chooseABin() {
+    int[] nextPosition = getNewPosition(myX, myY, myDirection, gridUnit);
+    float chance = random(0,1);    
+    float direction;
+    Bin nextBin = new Bin(nextPosition[0], nextPosition[1]);
     
-    if (iterator > 10) {
-      myStrokeHue = 0;
+    // if next bin is not empty and in bounds
+    if (!nextBin.isEmpty() && nextBin.isInBounds()) {
+
+      if (nextBin.wasVisited() && chance < chanceToAdoptIntersectedPath) {
+        myDirection = nextBin.visitorsDirection();        
+        
+      } else if (nextBin.neighborsAverageDirection() > 0 && chance < chanceToAdoptNeighborPath) {
+        myDirection = nextBin.neighborsAverageDirection();
+        
+      } else if (chance < chanceToChangeDirection) {
+        myDirection = nudgeAngle(myDirection);
+      }
+      
+      nextPosition = getNewPosition(myX, myY, myDirection, gridUnit);
+      nextBin = new Bin(nextPosition[0], nextPosition[1]);
+      
+    // if next bin is empty or out-of-bounds
+    } else {
+      nextBin = getClosestAvailableBin();
     }
-    
-    strokeWeight(myStrokeWeight);
-    stroke(myStrokeHue, myStrokeSaturation, myStrokeBrightness);
+  
+    return nextBin;  
+  }
+  
+  void drawPath(int x1, int y1, int x2, int y2, int iterator) {    
+    strokeWeight(0.1);
+    stroke(40, 20, 20, 10);
     line(x1, y1, x2, y2);
   }
   
@@ -97,8 +128,9 @@ class Rahul
   }
   
   Rahul duplicate(){
-    // make a new Rahul with half my stuff
-    Rahul newRahul = new Rahul(myX, myY, floor(myStuffCount/2));
+    // make a new Rahul with half my stuff and a different direction
+    float newDirection = nudgeAngle(myDirection);
+    Rahul newRahul = new Rahul(myX, myY, floor(myStuffCount/2), newDirection);
     
     // halve my own stuff
     myStuffCount = ceil(myStuffCount/2);
@@ -106,48 +138,46 @@ class Rahul
     return newRahul;
   }
   
-  // retrieve brightest bin around me
-  Bin getBrightestBinAround(int x, int y){    
-    int[] delta = {0, -1};
-    int dx = 0;
-    int dy = 0;
+  float getChanceToDuplicate(){
+    return chanceToDuplicate;
+  }
+  
+  Bin getClosestAvailableBin(){
+    boolean binFound = false, first = true;
+    Bin closestBin = new Bin(0, 0);
     
-    // initialize brightest bin to the center one
-    ArrayList<Bin> brightestBins = new ArrayList<Bin>();
-    Bin brightestBin = new Bin(x+dx*gridUnit, y+dy*gridUnit);
-    
-    // go in a counter-clockwise spiral around me
-    for(int i=0; i<8; i++) {
-      
-      // change directions
-      if (dx==dy || (dx<0 && dx==(-1*dy)) || (dx>0 && dx==(1-dy))) {
-        int temp = delta[0];
-        delta[0] = -1*delta[1];
-        delta[1] = temp;          
-      }      
-      
-      // add delta
-      dx += delta[0];
-      dy += delta[1];
-     
-      // check if it is the brightest bin and in bounds      
-      Bin bin = new Bin(x+dx*gridUnit, y+dy*gridUnit);
-      if (bin.getBrightness() > brightestBin.getBrightness() && bin.isInBounds()) {
-        brightestBins = new ArrayList<Bin>();
-        brightestBin = bin;
-      } 
-      if (bin.getBrightness() >= brightestBin.getBrightness() && bin.isInBounds()) {
-        brightestBins.add(bin);
+    for(int a=int(angleUnit); a<=180 && !binFound; a+=int(angleUnit)) {
+      for(int b=-1; b<=1 && !binFound; b+=2) {
+        
+        float direction = normalizeAngle(myDirection+float(b * a));
+        int[] position = getNewPosition(myX, myY, direction, gridUnit);
+        Bin bin = new Bin(position[0], position[1]);
+        
+        // default to first in-bounds bin
+        if (first && bin.isInBounds()) {
+          closestBin = bin;
+          first = false; 
+        }
+        
+        if (!bin.isEmpty() && bin.isInBounds()) {
+          closestBin = bin;
+          binFound = true;
+        }
+        
       }      
     }
     
-    // choose a random bright bin
-    if (brightestBins.size() > 0) {
-      int rand = round(random(0, brightestBins.size()-1));
-      brightestBin = brightestBins.get(rand);
-    }
+    return closestBin;
+  }
+  
+  int[] getNewPosition(int x, int y, float angle, float distance){
+    int[] coords = new int[2];
+    float r = radians(angle);
     
-    return brightestBin;
+    coords[0] = x + round(distance*cos(r));
+    coords[1] = y + round(distance*sin(r));
+    
+    return coords;
   }
   
   int getStuffCount(){
@@ -186,20 +216,22 @@ class Rahul
   
   boolean move(int iterator){
     // see if I can find a bin that's not empty or the current one
-    myBin = getBrightestBinAround(myX, myY);    
-    boolean foundStuff = (!myBin.isEmpty() && !myBin.positionEquals(myX, myY));
+    myBin = chooseABin();    
+    boolean foundStuff = (!myBin.isEmpty() && myBin.isInBounds() && !myBin.positionEquals(myX, myY));
     int prevX = myX;
     int prevY = myY;
     
     // stuff found
     if (foundStuff) {
       myX = myBin.getX();
-      myY = myBin.getY();
+      myY = myBin.getY();     
     
     // no stuff in any bin around me
     } else {      
-      moveRandomly();
+      moveRandomly();            
     }
+    
+    myBin.setPathDirection(myDirection);
     
     // draw path
     drawPath(prevX, prevY, myX, myY, iterator);
@@ -208,19 +240,39 @@ class Rahul
   }
   
   void moveRandomly(){
-    // randomly choose a direction
-    int xDirection = round(random(-1, 1));
-    int yDirection = round(random(-1, 1));
+    float newAngle = normalizeAngle(random(1, 360));
+    int[] newPosition = getNewPosition(myX, myY, newAngle, gridUnit);
     
     // move in that direction
-    myX += xDirection * gridUnit;
-    myY += yDirection * gridUnit;
+    myX = newPosition[0];
+    myY = newPosition[1];
+    myDirection = newAngle;
 
     // make sure i am not at the edge
     if (myX < gridUnit) myX = gridUnit;
     if (myY < gridUnit) myY = gridUnit;
     if (myX > storeWidth-gridUnit-1) myX = storeWidth-gridUnit-1;
-    if (myY > storeHeight-gridUnit-1) myY = storeHeight-gridUnit-1;  
+    if (myY > storeHeight-gridUnit-1) myY = storeHeight-gridUnit-1;
+    
+    // update my bin
+    myBin = new Bin(myX, myY);    
+  }
+  
+  float normalizeAngle(float angle){
+    // round to nearest angle unit
+    angle = round(angle/angleUnit)*angleUnit;
+    
+    // ensure I am within 1-360 degrees
+    if (angle > 360) angle = angle - 360;
+    else if (angle < 1) angle = 360 + angle;
+    
+    return angle;
+  }
+  
+  float nudgeAngle(float angle) {
+    float variance = angleUnit;
+    if (random(-1,1) < 0) variance *= -1;
+    return normalizeAngle(angle * variance);
   }
   
   void stealStuff() {
@@ -231,20 +283,19 @@ class Rahul
 
 class RahulGang
 {
-  int gangSizeLimit = 40;
-  float chanceToDuplicate = 0.8;
+  int gangSizeLimit = 40;  
   
   ArrayList<Rahul> gang;
 
   RahulGang (int x, int y) {    
     gang = new ArrayList<Rahul>();
-    gang.add(new Rahul(x, y, 0));
+    gang.add(new Rahul(x, y, 0, random(1, 360)));
   }
   
   void giveJudgementTo(Rahul rahul) {
     float judgement = random(0, 1);
     
-    if (judgement < chanceToDuplicate && gang.size() < gangSizeLimit) {
+    if (judgement < rahul.getChanceToDuplicate() && gang.size() < gangSizeLimit) {
       Rahul newRahul = rahul.duplicate();
       gang.add(newRahul);
       
@@ -318,8 +369,48 @@ class Bin
               && myY<=storeHeight-gridUnit-1);
   }
   
+  float neighborsAverageDirection(){
+    int[] delta = {0, -1};
+    int dx = 0, dy = 0, directionCount = 0;
+    float directionsTotal = 0, averageDirection = 0;
+    
+    // go in a counter-clockwise spiral around me
+    for(int i=0; i<8; i++) {
+      
+      // change directions
+      if (dx==dy || (dx<0 && dx==(-1*dy)) || (dx>0 && dx==(1-dy))) {
+        int temp = delta[0];
+        delta[0] = -1*delta[1];
+        delta[1] = temp;          
+      }      
+      
+      // add delta
+      dx += delta[0];
+      dy += delta[1];
+     
+      // check if bin was visited     
+      Bin bin = new Bin(myX+dx*gridUnit, myY+dy*gridUnit);
+      if (bin.wasVisited()){
+        directionsTotal += bin.visitorsDirection();
+        directionCount++;
+      }           
+    }
+    
+    if (directionCount > 0) {
+      averageDirection = directionsTotal/directionCount;
+    }
+    
+    return averageDirection;
+  }
+  
   boolean positionEquals(int x, int y) {
     return (x==myX && y==myY);
+  }
+  
+  void setPathDirection(float direction){
+    if (!wasVisited()) {
+      pathDirections[myX+myY*storeWidth] = direction;
+    }
   }
   
   float take(){
@@ -341,6 +432,14 @@ class Bin
     bins[myX+myY*storeWidth] = c;
     
     return stuffAmount;
+  }
+  
+  float visitorsDirection(){
+    return pathDirections[myX+myY*storeWidth];
+  }
+  
+  boolean wasVisited(){
+    return (visitorsDirection() > 0);
   }
   
 }
