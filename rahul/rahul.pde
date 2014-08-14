@@ -82,11 +82,6 @@ class Rahul
 {
   int capacity = 2000;
   
-  float[] hueRange = {30, 50};
-  float[] brightnessRange = {10, 80};
-  float[] saturationRange = {20, 80};
-  float[] strokeWeightRange = {0.2, 1};
-  
   float chanceToDuplicate = 0.5;
   float chanceToChangeDirection = 0.5;
   float chanceToAdoptIntersectedPath = 0.4;
@@ -343,7 +338,7 @@ class RahulGang
 
 class Bin
 {
-  float stuffBrightness = 20; // a white pixel will have 100 brightness and thus about 10 things to take; < 10 brightness is considered empty
+  float stuffBrightness = 20; // a white pixel will have 100 brightness and thus about 5 things to take; < 20 brightness is considered empty
   
   float myHue, mySaturation, myBrightness;
   int myX, myY;
