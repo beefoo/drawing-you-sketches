@@ -54,9 +54,8 @@ void setup() {
   pathDirections = new float[spaceWidth*spaceHeight];
   theRahulGang = new RahulGang(startX, startY);
   
-  // frame saver
-  if (captureFrames) fs = new FrameSaver();
-  
+  // output methods
+  if (captureFrames) fs = new FrameSaver();  
   if (savePDF) beginRecord(PDF, outputPDF);
 }
 
