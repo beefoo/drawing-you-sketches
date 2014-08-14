@@ -1,7 +1,7 @@
 /*
  * You Drawing You (http://youdrawingyou.com)
  * Author: Brian Foo (http://brianfoo.com)
- * This drawing algorithm is based on my friend Rahul
+ * This drawing algorithm is based on my friend Rahul (http://youdrawingyou.com/sketches/rahul)
  */
  
 import processing.pdf.*;
@@ -11,22 +11,22 @@ String outputFile = "output/rahul.png";
 String outputPDF = "output/rahul.pdf";
 boolean savePDF = false;
 
-int storeWidth = 675;
-int storeHeight = 900;
-int startX = round(storeWidth/2);
-int startY = round(storeHeight/2);
+int spaceWidth = 675;
+int spaceHeight = 900;
+int startX = round(spaceWidth/2);
+int startY = round(spaceHeight/2);
 int gridUnit = 20;
 float angleUnit = 10;
 
 int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
-int frameCaptureEvery = 120;
+int frameCaptureEvery = 240;
 int frameIterator = 0;
 boolean captureFrames = false;
 FrameSaver fs;
 
 PGraphics pg;
-PImage store;
+PImage space;
 RahulGang theRahulGang;
 color[] bins;
 float[] pathDirections;
@@ -34,15 +34,15 @@ float[] pathDirections;
 void setup() {
   
   // set the stage
-  size(storeWidth, storeHeight);
+  size(spaceWidth, spaceHeight);
   colorMode(HSB, 360, 100, 100, 100);
   background(0, 0, 100);
   frameRate(fr);
-  pg = createGraphics(storeWidth, storeHeight);
+  pg = createGraphics(spaceWidth, spaceHeight);
   
-  // load store from image source
-  store = loadImage(imgSrc);
-  pg.image(store, 0, 0);
+  // load space from image source
+  space = loadImage(imgSrc);
+  pg.image(space, 0, 0);
   pg.loadPixels();
   
   // just lines
@@ -51,7 +51,7 @@ void setup() {
   
   // set the bins and create a Rahul Gang  
   bins = pg.pixels;
-  pathDirections = new float[storeWidth*storeHeight];
+  pathDirections = new float[spaceWidth*spaceHeight];
   theRahulGang = new RahulGang(startX, startY);
   
   // frame saver
@@ -146,7 +146,6 @@ class Rahul
   }
   
   void dropEverything() {
-    // TODO
     myStuffCount = 0;
   }
   
@@ -274,8 +273,8 @@ class Rahul
     // make sure i am not at the edge
     if (myX < gridUnit) myX = gridUnit;
     if (myY < gridUnit) myY = gridUnit;
-    if (myX > storeWidth-gridUnit-1) myX = storeWidth-gridUnit-1;
-    if (myY > storeHeight-gridUnit-1) myY = storeHeight-gridUnit-1;
+    if (myX > spaceWidth-gridUnit-1) myX = spaceWidth-gridUnit-1;
+    if (myY > spaceHeight-gridUnit-1) myY = spaceHeight-gridUnit-1;
     
     // update my bin
     myBin = new Bin(myX, myY);    
@@ -355,7 +354,7 @@ class Bin
     ensureInBounds();
     
     // retrieve bin's current color
-    color c = bins[myX+myY*storeWidth];
+    color c = bins[myX+myY*spaceWidth];
     myHue = hue(c);
     mySaturation = saturation(c);
     myBrightness = brightness(c);
@@ -365,8 +364,8 @@ class Bin
   void ensureInBounds(){
     if (myX < gridUnit) myX = gridUnit;
     if (myY < gridUnit) myY = gridUnit;
-    if (myX > storeWidth-gridUnit-1) myX = storeWidth-gridUnit-1;
-    if (myY > storeHeight-gridUnit-1) myY = storeHeight-gridUnit-1;
+    if (myX > spaceWidth-gridUnit-1) myX = spaceWidth-gridUnit-1;
+    if (myY > spaceHeight-gridUnit-1) myY = spaceHeight-gridUnit-1;
   }
   
   float getBrightness() {
@@ -388,8 +387,8 @@ class Bin
   boolean isInBounds(){
     return (myX>=gridUnit 
               && myY>=gridUnit 
-              && myX<=storeWidth-gridUnit-1
-              && myY<=storeHeight-gridUnit-1);
+              && myX<=spaceWidth-gridUnit-1
+              && myY<=spaceHeight-gridUnit-1);
   }
   
   float neighborsAverageDirection(){
@@ -432,7 +431,7 @@ class Bin
   
   void setPathDirection(float direction){
     if (!wasVisited()) {
-      pathDirections[myX+myY*storeWidth] = direction;
+      pathDirections[myX+myY*spaceWidth] = direction;
     }
   }
   
@@ -452,13 +451,13 @@ class Bin
     
     // update bin    
     color c = color(myHue, mySaturation, myBrightness);
-    bins[myX+myY*storeWidth] = c;
+    bins[myX+myY*spaceWidth] = c;
     
     return stuffAmount;
   }
   
   float visitorsDirection(){
-    return pathDirections[myX+myY*storeWidth];
+    return pathDirections[myX+myY*spaceWidth];
   }
   
   boolean wasVisited(){
