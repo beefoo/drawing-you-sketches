@@ -21,7 +21,7 @@ float angleVariance = 10;
 
 int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
-int frameCaptureEvery = 240;
+int frameCaptureEvery = 120;
 int frameIterator = 0;
 boolean captureFrames = false;
 FrameSaver fs;
@@ -46,12 +46,7 @@ void setup() {
   pg.image(island, 0, 0);
   pg.loadPixels();
   landUnits = pg.pixels;  
-  
-  // just lines
-  noFill();
-  strokeWeight(0.1);
-  stroke(40, 20, 20, 40);
-  
+
   // create a team of Vickys 
   theVickyTeam = new VickyTeam(startX, startY);
   pathDirections = new float[islandWidth*islandHeight];
@@ -62,6 +57,11 @@ void setup() {
 }
 
 void draw(){
+  // just lines
+  noFill();
+  strokeWeight(0.1);
+  stroke(40, 20, 20, 50);
+  
   if(captureFrames && !fs.running) {
     fs.start();
   }
