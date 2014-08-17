@@ -15,12 +15,12 @@ int spaceWidth = 675;
 int spaceHeight = 900;
 int startX = round(spaceWidth/2);
 int startY = round(spaceHeight/2);
-int gridUnit = 20;
+int gridUnit = 25;
 float angleUnit = 10;
 
 int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
-int frameCaptureEvery = 240;
+int frameCaptureEvery = 420;
 int frameIterator = 0;
 boolean captureFrames = false;
 FrameSaver fs;
@@ -45,10 +45,6 @@ void setup() {
   pg.image(space, 0, 0);
   pg.loadPixels();
   
-  // just lines
-  noFill();
-  // smooth();
-  
   // set the bins and create a Rahul Gang  
   bins = pg.pixels;
   pathDirections = new float[spaceWidth*spaceHeight];
@@ -60,6 +56,7 @@ void setup() {
 }
 
 void draw(){
+  noFill();
   if(captureFrames && !fs.running) {
     fs.start();
   }
@@ -131,7 +128,7 @@ class Rahul
   
   void drawPath(int x1, int y1, int x2, int y2, int iterator) {    
     strokeWeight(0.1);
-    stroke(40, 20, 20, 10);
+    stroke(40, 20, 20, 5);
     line(x1, y1, x2, y2);
   }
   
@@ -278,6 +275,9 @@ class Rahul
     // round to nearest angle unit
     angle = round(angle/angleUnit)*angleUnit;
     
+    // translate 90 degrees
+    //angle = angle-90;
+    
     // ensure I am within 1-360 degrees
     if (angle > 360) angle = angle - 360;
     else if (angle < 1) angle = 360 + angle;
@@ -288,6 +288,7 @@ class Rahul
   float nudgeAngle(float angle) {
     float variance = angleUnit;
     if (random(-1,1) < 0) variance *= -1;
+    // return normalizeAngle(angle + variance);
     return normalizeAngle(angle * variance);
   }
   
@@ -299,7 +300,7 @@ class Rahul
 
 class RahulGang
 {
-  int gangSizeLimit = 40;  
+  int gangSizeLimit = 50;  
   
   ArrayList<Rahul> gang;
 

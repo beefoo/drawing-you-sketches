@@ -19,9 +19,9 @@ int gridUnit = 1;
 float angleUnit = 1;
 float angleVariance = 10;
 
-int fr = 120;
+int fr = 60;
 String outputMovieFile = "output/frames/frames-#####.png";
-int frameCaptureEvery = 120;
+int frameCaptureEvery = 60;
 int frameIterator = 0;
 boolean captureFrames = false;
 FrameSaver fs;
@@ -81,7 +81,7 @@ void mousePressed() {
 
 class Vicky
 {
-  float walkDistance = 10, runDistance = 200, swimDistance = 60, jumpDistance = 300;
+  float walkDistance = 10, runDistance = 100, swimDistance = 325, jumpDistance = 325;
   float chanceToDuplicate = 0.2, chanceToObserve = 0.2, chanceToRun = 0.1;
   int observationTimeUnit = 20;
   
@@ -248,6 +248,9 @@ class Vicky
     // round to nearest angle unit
     angle = round(angle/angleUnit)*angleUnit;
     
+    // translate 90 degrees
+    angle = angle-90;
+    
     // ensure I am within 1-360 degrees
     if (angle > 360) angle = angle - 360;
     else if (angle < 1) angle = 360 + angle;
@@ -257,7 +260,7 @@ class Vicky
   
   float nudgeAngle(float angle, float variance) {
     if (random(-1,1) < 0) variance *= -1;
-    return normalizeAngle(angle * variance);
+    return normalizeAngle(angle + variance);
   }
   
   void observe(){
@@ -321,9 +324,9 @@ class VickyTeam
 
 class MonkeyGroup
 {
-  float bigThreshold = 80;
+  float bigThreshold = 60;
   float smallThreshold = 50;
-  float waterThreshold = 5;
+  float waterThreshold = 20;
   
   int ourX, ourY;
   color ourColor;
