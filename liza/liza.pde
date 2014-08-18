@@ -13,12 +13,15 @@ boolean savePDF = false;
 
 int shelfWidth = 675;
 int shelfHeight = 900;
-int startX = shelfWidth/2;
-int startY = shelfHeight/2;
 int gridUnit = 20;
 int spaceIterator = 0;
 float angleUnit = 1;
 float angleVariance = 1;
+
+String hiresFile = "output/liza-hires.png";
+int hiresFactor = 8;
+PGraphics hires;
+boolean saveHires = false;
 
 int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
@@ -55,12 +58,20 @@ void setup() {
   // output methods
   if (captureFrames) fs = new FrameSaver();  
   if (savePDF) beginRecord(PDF, outputPDF);
+  if (saveHires) {
+    hires = createGraphics(shelfWidth*hiresFactor, shelfHeight*hiresFactor);
+    beginRecord(hires);
+  }
 }
 
 void draw(){
   // just lines
   noFill();
   strokeWeight(0.1);
+  
+  if (saveHires) {
+    hires.scale(hiresFactor); 
+  }
   
   if(captureFrames && !fs.running) {
     fs.start();
@@ -75,7 +86,13 @@ void mousePressed() {
   } else {
     save(outputFile);
   }
-  if (savePDF) endRecord();
+  if (savePDF) {
+    endRecord();
+  }
+  if (saveHires) {
+    hires.save(hiresFile);
+    endRecord();
+  }
   exit();
 }
 
@@ -95,24 +112,24 @@ float halton(int hIndex, int hBase) {
 class Liza
 {
   int baseX = 2, baseY = 3;
-  int myX, myY;
-  float myDirection;
-  float[] xAngleRange = {125.0, 205.0};
-  float spaceBrightnessThreshold = 50;
+  float myX, myY;
+  float[] xAngleRange = {125.0, 205.0};  
   float[] strokeBrightnessRange = {40, 40};
   
   Liza () {}
   
   void build(){
     setNextPosition();
-    if (shouldBuildSupport()) {
+    ShelfSpace space = new ShelfSpace(myX, myY);
+    
+    if (space.needsSupport()) {
       buildSupport(1.0);
       buildSupport(-1.0);
     }    
   }
   
   void buildSupport(float xDirection) {
-    int x = myX, y = myY;
+    float x = myX, y = myY;
     int yMax = shelfHeight-gridUnit-1,
         xMax = shelfWidth-gridUnit-1,
         xMin = gridUnit;
@@ -122,8 +139,7 @@ class Liza
       float angleMultiplier = 1.0*y/shelfHeight,
             angle = (xAngleRange[1]-xAngleRange[0])*angleMultiplier+xAngleRange[0];
       angle = nudgeAngle(angle*xDirection, angleVariance);
-      //println(x, y, angle, gridUnit);
-      int[] newPosition = getNewPosition(x, y, angle, gridUnit);
+      float[] newPosition = getNewPosition(x, y, angle, gridUnit);
       drawPath(x, y, newPosition[0], newPosition[1], multiplier);
       x = newPosition[0];
       y = newPosition[1];
@@ -132,23 +148,27 @@ class Liza
     }
   }
   
-  void drawPath(int x1, int y1, int x2, int y2, float multiplier) {
+  void drawPath(float x1, float y1, float x2, float y2, float multiplier) {
     //color spaceColor = spaces[x1 + y1*shelfWidth];
     //float spaceBrightness = brightness(spaceColor);
     float strokeBrightness = (strokeBrightnessRange[1]-strokeBrightnessRange[0])*multiplier + strokeBrightnessRange[0];
     
     stroke(40, 20, 20, strokeBrightness);
-
     
     line(x1, y1, x2, y2);
+    
+    if (saveHires) {
+      hires.stroke(40, 20, 20, strokeBrightness);
+      hires.line(x1, y1, x2, y2);
+    }
   }
   
-  int[] getNewPosition(int x, int y, float angle, float distance){
-    int[] coords = new int[2];
+  float[] getNewPosition(float x, float y, float angle, float distance){
+    float[] coords = new float[2];
     float r = radians(angle);
     
-    coords[0] = x + round(distance*cos(r));
-    coords[1] = y + round(distance*sin(r));
+    coords[0] = x + distance*cos(r);
+    coords[1] = y + distance*sin(r);
     
     //println(coords[0], coords[1]);
     
@@ -184,26 +204,10 @@ class Liza
     float hx = halton(spaceIterator, baseX);
     float hy = halton(spaceIterator, baseY);
     
-    myX = round(hx*(shelfWidth-gridUnit*2)+gridUnit);
-    myY = round(hy*(shelfHeight-gridUnit*2)+gridUnit);
+    myX = hx*(shelfWidth-gridUnit*2)+gridUnit;
+    myY = hy*(shelfHeight-gridUnit*2)+gridUnit;
     
     spaceIterator++;
-
-    // setVisited(myX, myY);
-  }
-  
-  void setVisited(int x, int y) {
-    visitedSpaces[x+y*shelfWidth] = 1;
-  }
-  
-  boolean shouldBuildSupport(){
-    boolean answer = false;
-    color spaceColor = spaces[myX + myY*shelfWidth];
-    float spaceBrightness = brightness(spaceColor);
-    if (spaceBrightness<spaceBrightnessThreshold) {
-      answer = true;
-    }
-    return answer;
   }
 
 }
@@ -228,6 +232,29 @@ class LizaTeam
     }    
   } 
 
+}
+
+class ShelfSpace 
+{
+  float spaceBrightnessThreshold = 50;
+  
+  float myX, myY;
+  
+  ShelfSpace(float x, float y) {
+    myX = x;
+    myY = y;
+  }
+  
+  boolean needsSupport(){
+    boolean answer = false;
+    color spaceColor = spaces[int(myX) + int(myY)*shelfWidth];
+    float spaceBrightness = brightness(spaceColor);
+    if (spaceBrightness<spaceBrightnessThreshold) {
+      answer = true;
+    }
+    return answer;
+  }
+  
 }
 
 class FrameSaver extends Thread {

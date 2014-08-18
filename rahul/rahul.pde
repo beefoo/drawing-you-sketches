@@ -288,8 +288,8 @@ class Rahul
   float nudgeAngle(float angle) {
     float variance = angleUnit;
     if (random(-1,1) < 0) variance *= -1;
-    // return normalizeAngle(angle + variance);
-    return normalizeAngle(angle * variance);
+    return normalizeAngle(angle + variance);
+    // return normalizeAngle(angle * variance);
   }
   
   void stealStuff() {
