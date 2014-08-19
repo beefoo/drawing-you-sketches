@@ -42,11 +42,11 @@ void setup() {
   
   // load space from image source
   space = loadImage(imgSrc);
-  pg.image(space, 0, 0);
-  pg.loadPixels();
+  image(space, 0, 0);
+  loadPixels();
   
   // set the bins and create a Rahul Gang  
-  bins = pg.pixels;
+  bins = pixels;
   pathDirections = new float[spaceWidth*spaceHeight];
   theRahulGang = new RahulGang(startX, startY);
   
@@ -128,7 +128,7 @@ class Rahul
   
   void drawPath(int x1, int y1, int x2, int y2, int iterator) {    
     strokeWeight(0.1);
-    stroke(40, 20, 20, 5);
+    stroke(0, 100, 100, 5);
     line(x1, y1, x2, y2);
   }
   
