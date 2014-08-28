@@ -9,7 +9,7 @@ import processing.pdf.*;
 String imgSrc = "img/katie.jpg";
 String outputFile = "output/katie.png";
 String outputPDF = "output/katie.pdf";
-boolean savePDF = true;
+boolean savePDF = false;
 
 int bookWidth = 675;
 int bookHeight = 900;
@@ -20,7 +20,7 @@ int fr = 120;
 String outputMovieFile = "output/frames/frames-#####.png";
 int frameCaptureEvery = 30;
 int frameIterator = 0;
-boolean captureFrames = true;
+boolean captureFrames = false;
 FrameSaver fs;
 
 PGraphics pg;
