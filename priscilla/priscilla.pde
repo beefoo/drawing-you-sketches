@@ -1,7 +1,7 @@
 /*
- * Drawing You Better (http://drawingyoubetter.com)
+ * You Drawing You (http://youdrawingyou.com)
  * Author: Brian Foo (http://brianfoo.com)
- * This drawing algorithm is based on my friend Priscilla (http://drawingyoubetter.com/sketches/priscilla)
+ * This drawing algorithm is based on my friend Priscilla (http://youdrawingyou.com/sketches/priscilla)
  */
 
 import processing.pdf.*;

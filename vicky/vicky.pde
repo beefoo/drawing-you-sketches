@@ -1,7 +1,7 @@
 /*
- * Drawing You Better (http://drawingyoubetter.com)
+ * You Drawing You (http://youdrawingyou.com)
  * Author: Brian Foo (http://brianfoo.com)
- * This drawing algorithm is based on my friend Vicky (http://drawingyoubetter.com/sketches/vicky)
+ * This drawing algorithm is based on my friend Vicky (http://youdrawingyou.com/sketches/vicky)
  */
 
 import processing.pdf.*;

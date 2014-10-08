@@ -1,7 +1,7 @@
 /*
- * Drawing You Better (http://drawingyoubetter.com)
+ * You Drawing You (http://youdrawingyou.com)
  * Author: Brian Foo (http://brianfoo.com)
- * This drawing algorithm is based on my friend Calvin (http://drawingyoubetter.com/sketches/calvin)
+ * This drawing algorithm is based on my friend Calvin (http://youdrawingyou.com/sketches/calvin)
  */
 
 import processing.pdf.*;

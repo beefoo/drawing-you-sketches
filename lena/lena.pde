@@ -1,7 +1,7 @@
 /*
- * Drawing You Better (http://drawingyoubetter.com)
+ * You Drawing You (http://youdrawingyou.com)
  * Author: Brian Foo (http://brianfoo.com)
- * This drawing algorithm is based on my friend Lena (http://drawingyoubetter.com/sketches/lena)
+ * This drawing algorithm is based on my friend Lena (http://youdrawingyou.com/sketches/lena)
  */
 
 import processing.pdf.*;
